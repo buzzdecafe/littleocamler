@@ -41,6 +41,8 @@ let eq_main = function
   | _                    -> false
 ;;
 
+let eq_main' ((a : main), (b : main)) = a = b;;
+
 let has_steak = function
   | ((_ : meza), Steak, (_ : dessert)) -> true
   | _              -> false
