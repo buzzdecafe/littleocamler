@@ -156,7 +156,7 @@ module NumberAsNum : N_C_R =
 ;;
 
 (* ints *)
-module NumberAsInt : N = 
+module NumberAsInt : N_C_R = 
   struct
     type number = int
     exception Too_small
@@ -192,8 +192,9 @@ module PON (ANum: N) : P with type number = ANum.number =
 ;;
 
 module IntStruct = NumberAsInt;;
-module NumStruct = NumberAsNum;;
 module IntArith = PON (IntStruct);;
+
+module NumStruct = NumberAsNum;;
 module NumArith = PON (NumStruct);;
 
 let ex10_2 = NumStruct.reveal 
@@ -201,8 +202,132 @@ let ex10_2 = NumStruct.reveal
 ;;
 (* yay! now it works! That seems like a lot of effort to add 1 + 2! *)
 
+let ex10_3 = IntStruct.reveal 
+  (IntArith.plus (IntStruct.conceal 1) (IntStruct.conceal 2))
+;;
+
 (* There is another way out ... *)
 
+(* ints *)
+module NumberAsInt2 : N with type number = int = 
+  struct
+    type number = int
+    exception Too_small
+    let succ n = n + 1
+    let pred n = if eq_int n 0 then raise Too_small else (n - 1)
+    let is_zero = eq_int 0
+  end
+;;
+
+module IntStruct2 = NumberAsInt2;;
+module IntArith2 = PON (IntStruct2);;
+
+let ex10_4 = IntArith2.plus 1 2;;
+
+(* nums *)
+module NumberAsNum2 : N with type number = num = 
+  struct
+    type number = num 
+    exception Too_small
+    let succ n = One_more_than n
+    let pred = function
+      | Zero            -> raise Too_small
+      | One_more_than n -> n
+    let is_zero = function
+      | Zero -> true
+      | _    -> false
+  end
+;;
+
+module NumStruct2 = NumberAsNum2;;
+module NumArith2 = PON (NumStruct2);;
+
+
+let ex10_5 = NumArith2.plus (One_more_than Zero) (One_more_than (One_more_than Zero));;
+
+module type S = 
+  sig
+    type number1
+    type number2
+    val similar : number1 -> number2 -> bool
+  end
+;;
+
+module Same (ANum: N) (BNum: N) : (S with type number1 = ANum.number and type number2 = BNum.number) = 
+  struct
+    type number1 = ANum.number
+    type number2 = BNum.number
+    let rec sim n m = 
+      if ANum.is_zero n then BNum.is_zero m
+      else sim (ANum.pred n) (BNum.pred m)
+    let similar n m = 
+      try sim n m with
+      | ANum.Too_small -> false
+      | BNum.Too_small -> false
+  end
+;;
+
+module SimIntNum = Same (IntStruct) (NumStruct);;
+module SimNumInt = Same (NumStruct) (IntStruct);;
+
+let ex10_6 = SimNumInt.similar (NumStruct.conceal 0) (IntStruct.conceal 0);;
+
+
+(*
+ * Still not there yet!!!
+ *)
+let new_num_plus x y = 
+  NumStruct.reveal 
+    (NumArith.plus 
+      (NumStruct.conceal x)
+      (NumStruct.conceal y))
+;;
+
+let new_int_plus x y = 
+  IntStruct.reveal 
+    (IntArith.plus 
+      (IntStruct.conceal x)
+      (IntStruct.conceal y))
+;;
+
+module type J = 
+  sig
+    val new_plus : int -> int -> int
+  end
+;;
+
+module NP (ANum : N_C_R) (AP : P with type number = ANum.number) : J = 
+  struct
+    let new_plus x y = 
+      ANum.reveal 
+        (AP.plus 
+          (ANum.conceal x)
+          (ANum.conceal y))
+  end
+;;
+
+module NPStruct = NP (NumberAsNum) (NumArith);;
+
+(* wow, that's it? All that work to get here? *)
+
+(* and now _times_ *)
+module type T = 
+  sig
+    type number
+    val times : number -> number -> number
+  end
+;;
+
+module TON (ANum : N) (AP : P with type number = ANum.number) : T with type number = ANum.number = 
+  struct
+    type number = ANum.number
+    let rec times n m =
+      if ANum.is_zero m then m
+      else AP.plus n (times n (ANum.pred m))
+  end
+;;
+
+(* Is that all there is? *)
 
 
 
