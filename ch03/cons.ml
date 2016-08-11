@@ -38,7 +38,7 @@ let topped = top_anchovy_with_cheese (
 
 (* let subst_anchovy_by_cheese x = remove_anchovy (top_anchovy_with_cheese x);; *)
 
-let subst_anchovy_by_cheese = function
+let rec subst_anchovy_by_cheese = function
   | Crust     -> Crust
   | Cheese x  -> Cheese  (subst_anchovy_by_cheese x)
   | Onion x   -> Onion   (subst_anchovy_by_cheese x)
