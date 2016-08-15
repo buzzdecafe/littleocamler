@@ -117,6 +117,23 @@ let eq_fruit_in_atom a = function
   | A_slist ls -> false
 ;;
 
+(* After we have designed a program that naturally follows the datatype definitions, we can *)
+(* considerably improve it by focusing on its weaknesses and carefully rearranging its      *)
+(* pieces.                                                                                  *)
+
+(* fruit -> fruit slist -> fruit slist *)
+let rec rem_from_slist1 a = function
+  | Empty          -> Empty
+  | Scons (hd, tl) ->
+      if eq_fruit_in_atom a hd
+      then rem_from_slist1 a tl
+      else Scons (rem_from_sexp1 a hd, (rem_from_slist1 a tl))
+and
+  rem_from_sexp1 a = function
+  | An_atom f -> An_atom f
+  | A_slist y -> A_slist (rem_from_slist1 a y)
+;;
+
 let rec
 rem_from_slist a = function
   | Empty          -> Empty
@@ -126,11 +143,18 @@ rem_from_slist a = function
       else Scons ((An_atom hd), (rem_from_slist a tl))
   | Scons ((A_slist ls), tl) -> 
       Scons ((A_slist (rem_from_slist a ls)), (rem_from_slist a tl))
-and
-rem_from_sexp a = function
-  | An_atom f -> An_atom f
-  | A_slist y -> A_slist (rem_from_slist a y)
 ;;
+
+let rem = rem_from_slist Fig (Scons (An_atom(Fig),
+                                     Empty));;
+
+let rem' = rem_from_slist Fig (Scons(A_slist
+                                       (Scons(An_atom (Fig),
+                                              Scons(An_atom(Peach),
+                                                    Empty))),
+                                     Scons(An_atom(Fig),
+                                           Scons(An_atom(Lemon),
+                                                 Empty))));;
 
 
 
