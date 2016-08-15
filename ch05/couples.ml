@@ -35,8 +35,8 @@ let rec rem_anchovy = function
 
 let rec rem_tuna = function
   | Bottom            -> Bottom
-  | Topping (Tuna, x) -> rem_anchovy x
-  | Topping (f, x)    -> Topping (f, rem_anchovy x)
+  | Topping (Tuna, x) -> rem_tuna x
+  | Topping (f, x)    -> Topping (f, rem_tuna x)
 ;;
 
 let rec rem_fish (f : fish) p = 
